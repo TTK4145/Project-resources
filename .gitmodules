@@ -1,0 +1,3 @@
+[submodule "elev_algo/driver"]
+	path = elev_algo/driver
+	url = https://github.com/TTK4145/driver-c
