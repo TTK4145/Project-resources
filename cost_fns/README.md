@@ -9,6 +9,11 @@ However, *maturity in programming* is still part of the learning goals, so any t
 Request distribution algorithms
 ===============================
 
+ - [Alternative 1](#alternative-1-assigning-only-the-new-request): Assigning only the new request
+   - [Alternative 1.1](#alternative-11-time-until-completionidle): Time until completion/idle
+   - [Alternative 1.2](#alternative-12-time-until-unassigned-request-served): Time until unassigned request served
+ - [Alternative 2](#alternative-2-reassigning-all-requests): Reassigning all requests
+
 Required data
 -------------
 
@@ -29,7 +34,7 @@ From this we can calculate the cost of the new unassigned hall request by adding
 
 #### Alternative 1.1: Time until completion/idle
 
-As a reminder, this is the data a single elevator contains (see `[elevator.h](/../elev_algo/elevator.h)` from the single-elevator example):
+As a reminder, this is the data a single elevator contains (see `[elevator.h](../elev_algo/elevator.h)` from the single-elevator example):
 ```C
 typedef struct {
     int                     floor;
@@ -172,11 +177,38 @@ int timeToServeRequest(Elevator e_old, Button b, floor f){
 
 ### Alternative 2: Reassigning all requests
 
-TODO: Migrate [the hall request assigner](https://github.com/klasbo/hall_request_assigner) to this repo  
-TODO: Explain how it works. Short version: Simulate the elevators one step (travel or door open) at a time, always moving the elevator with the shortest duration, and picking up/assigning hall requests as they are reached.  
-TODO: Provide executable
+For this alternative, all hall requests are reassigned whenever new data enters the system. This new data could be a new request, an updated state from some elevator, or an update on who is alive on the network. This redistribution means that a request is not necessarily assigned to the same elevator for the duration of its lifetime, but can instead be re-assigned to a new elevator, for example if a new idle elevator connects to the network, or the previously assigned elevator gets a lot of cab reqeusts.
 
+In order for this approach to work, it is necessary that either a) this distribution is uniquely calculated by some single elevator (some kind of master elevator), or b) all elevators that calculate the redistribution eventually come to the same conclusion (if the input data is not (eventually) consistent across the elevators, we can end up in a situation where a request is never served because all the elevators come to different conclusions that say "it is optimal that some other elevator is serving this request")
 
+Unlike with Alternative 1, it is not recommended that you try to implement this code yourself - at least not without being inspired by (aka copying) existing code. This code [is found here](/hall_request_assigner), and has already been compiled as a standalone executable which can be found in [the releases tab](https://github.com/TTK4145/Project-resources/releases/latest).
+
+----
+
+Again, we reuse the functions that we already have from the single elevator algorithm: Choose Direction, Should Stop, and Clear Requests At Current Floor - with the modification for clearing requests such that there are no side-effects when they are being cleared.
+
+The algorithm is very similar to that the Time To Idle function, but instead of simulating several single elevators to completion in turn, we simulate a single "step" for each elevator in turn. A "single step" here means something that takes time, which means either moving between floors or holding the door open. The main loop of the Time To Idle function must therefore be split into two phases, one for arriving at a floor and one for departing. And similarly, all elevators must be moved some initial step to put them into a state where they are either about to arrive or about to depart.
+
+Since a single step can have different durations associated with them (holding the door open might take longer than moving between floors), we make sure to always select the elevator that has the shortest total duration when choosing which elevator to move. The table of hall requests contains both the information of which requests are active (a boolean), and also who has been assigned each request (if it is active). The main loop then terminates once all active hall requests have been assigned. 
+
+A single step looks something like this:
+
+ - Create a temporary copy of this elevator, and assign it all active but unassigned requests.
+ - If arriving:
+   - Check if we should stop (given these temporary requests), and if we are stopping:
+     - Add the door open time
+     - Clear the request(s) at this floor, where the side-effect is *assigning it to ourselves* in the main hall request table
+   - Otherwise, keep moving to the next floor and add the travel time
+ - If departing:
+   - Choose a direction, and if we are idle:
+     - Remain idle
+   - Otherwise, depart in that direction and add the travel time
+
+----
+
+There is one major quirky issue though, involving the direction of the requests. Say we have one elevator at floor 0, one at floor 3, and two hall requests Down-1 and Up-2. The elevator at the bottom moves up to floor 1, the elevator at the top moves down to floor 2. In turn, they both see that there are requests further along in the direction of travel (as per the Should Stop function), and neither take the requests, but instead keep moving. Thus, the elevator at the top moved down to floor 1, and the elevator at the bottom moved up to floor 2, and have moved right past each other!
+
+Which means we need a special case this situation, that can be expressed as "all the unassigned hall requests are at floors where there already is an elevator, and none of these elevators have any remaining cab requests". If this situation is true, we can take a shortcut in the main loop, and immediately assign all the remaining hall requests.
 
 
 
