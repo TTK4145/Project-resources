@@ -34,7 +34,7 @@ From this we can calculate the cost of the new unassigned hall request by adding
 
 #### Alternative 1.1: Time until completion/idle
 
-As a reminder, this is the data a single elevator contains (see `[elevator.h](../elev_algo/elevator.h)` from the single-elevator example):
+As a reminder, this is the data a single elevator contains (see [`elevator.h`](../elev_algo/elevator.h) from the single-elevator example):
 ```C
 typedef struct {
     int                     floor;
@@ -181,7 +181,7 @@ For this alternative, all hall requests are reassigned whenever new data enters 
 
 In order for this approach to work, it is necessary that either a) this distribution is uniquely calculated by some single elevator (some kind of master elevator), or b) all elevators that calculate the redistribution eventually come to the same conclusion (if the input data is not (eventually) consistent across the elevators, we can end up in a situation where a request is never served because all the elevators come to different conclusions that say "it is optimal that some other elevator is serving this request")
 
-Unlike with Alternative 1, it is not recommended that you try to implement this code yourself - at least not without being inspired by (aka copying) existing code. This code [is found here](/hall_request_assigner), and has already been compiled as a standalone executable which can be found in [the releases tab](https://github.com/TTK4145/Project-resources/releases/latest).
+Unlike with Alternative 1, it is not recommended that you try to implement this code yourself - at least not without being inspired by (aka copying) existing code. This code [is found here](hall_request_assigner), and has already been compiled as a standalone executable which can be found in [the releases tab](https://github.com/TTK4145/Project-resources/releases/latest).
 
 ----
 
