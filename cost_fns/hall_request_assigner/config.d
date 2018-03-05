@@ -8,4 +8,4 @@ enum ClearRequestType {
     inDirn,
 }
 
-ClearRequestType clearRequestType = ClearRequestType.all;
+ClearRequestType clearRequestType = ClearRequestType.inDirn;

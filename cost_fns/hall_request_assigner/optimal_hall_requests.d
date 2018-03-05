@@ -351,11 +351,7 @@ unittest {
         [false, false],
         [false, false],
     ];
-    
-    auto crt = clearRequestType;
-    clearRequestType = ClearRequestType.inDirn;
-    scope(exit) clearRequestType = crt;
-    
+        
     auto optimal = optimalHallRequests(hallreqs, states);
     assert(optimal == [
         "1" : [[0,0],[0,1],[0,0],[0,0]].to!(bool[][]),
