@@ -13,7 +13,7 @@ import std.stdio;
 
 
 
-bool[2][][string] optimalHallRequests(
+bool[][][string] optimalHallRequests(
     bool[2][]                       hallReqs,
     LocalElevatorState[string]      elevatorStates,
 ){    
@@ -53,10 +53,21 @@ bool[2][][string] optimalHallRequests(
     }
     
     
-    bool[2][][string] result;
-    foreach(id, _; elevatorStates){
-        result[id] = new bool[2][](hallReqs.length);
+    bool[][][string] result;
+    
+    if(includeCab){
+        foreach(id, _; elevatorStates){
+            result[id] = new bool[][](hallReqs.length, 3);
+            for(int f = 0; f < hallReqs.length; f++){
+                result[id][f][2] = elevatorStates[id].cabRequests[f];
+            }
+        }
+    } else {
+        foreach(id, _; elevatorStates){
+            result[id] = new bool[][](hallReqs.length, 2);
+        }
     }
+    
     for(int f = 0; f < hallReqs.length; f++){
         for(int c = 0; c < 2; c++){
             if(reqs[f][c].active){
@@ -64,7 +75,7 @@ bool[2][][string] optimalHallRequests(
             }
         }
     }
-    
+
         
     debug(optimal_hall_requests) writefln("\nfinal:");
     debug(optimal_hall_requests) writefln("states:\n  %(%s,\n  %)", states);
@@ -248,9 +259,9 @@ unittest {
 
     auto optimal = optimalHallRequests(hallreqs, states);
     assert(optimal == [
-        "1" : [[0,0],[1,0],[0,0],[0,0]].to!(bool[2][]),
-        "2" : [[0,0],[0,0],[0,0],[0,0]].to!(bool[2][]),
-        "3" : [[0,0],[0,0],[0,0],[0,0]].to!(bool[2][]),
+        "1" : [[0,0],[1,0],[0,0],[0,0]].to!(bool[][]),
+        "2" : [[0,0],[0,0],[0,0],[0,0]].to!(bool[][]),
+        "3" : [[0,0],[0,0],[0,0],[0,0]].to!(bool[][]),
     ]);
 }
 
@@ -272,8 +283,8 @@ unittest {
 
     auto optimal = optimalHallRequests(hallreqs, states);
     assert(optimal == [
-        "1" : [[0,0],[0,1],[0,0],[0,0]].to!(bool[2][]),
-        "2" : [[0,0],[0,0],[1,0],[0,0]].to!(bool[2][]),
+        "1" : [[0,0],[0,1],[0,0],[0,0]].to!(bool[][]),
+        "2" : [[0,0],[0,0],[1,0],[0,0]].to!(bool[][]),
     ]);
 
     
@@ -285,8 +296,8 @@ unittest {
 
     optimal = optimalHallRequests(hallreqs, states);
     assert(optimal == [
-        "1" : [[0,0],[0,1],[0,0],[0,0]].to!(bool[2][]),
-        "2" : [[0,0],[0,0],[1,0],[0,0]].to!(bool[2][]),
+        "1" : [[0,0],[0,1],[0,0],[0,0]].to!(bool[][]),
+        "2" : [[0,0],[0,0],[1,0],[0,0]].to!(bool[][]),
     ]);
     
     
@@ -299,8 +310,8 @@ unittest {
 
     optimal = optimalHallRequests(hallreqs, states);
     assert(optimal == [
-        "1" : [[0,0],[0,0],[1,0],[0,0]].to!(bool[2][]),
-        "2" : [[0,0],[0,1],[0,0],[0,0]].to!(bool[2][]),
+        "1" : [[0,0],[0,0],[1,0],[0,0]].to!(bool[][]),
+        "2" : [[0,0],[0,1],[0,0],[0,0]].to!(bool[][]),
     ]);
 }
 
@@ -321,8 +332,8 @@ unittest {
     
     auto optimal = optimalHallRequests(hallreqs, states);
     assert(optimal == [
-        "27" : [[1,0],[0,0],[0,0],[0,0]].to!(bool[2][]),
-        "20" : [[0,0],[0,0],[0,0],[0,0]].to!(bool[2][]),
+        "27" : [[1,0],[0,0],[0,0],[0,0]].to!(bool[][]),
+        "20" : [[0,0],[0,0],[0,0],[0,0]].to!(bool[][]),
     ]);
 }
 
@@ -347,8 +358,8 @@ unittest {
     
     auto optimal = optimalHallRequests(hallreqs, states);
     assert(optimal == [
-        "1" : [[0,0],[0,1],[0,0],[0,0]].to!(bool[2][]),
-        "2" : [[0,0],[1,0],[0,0],[0,0]].to!(bool[2][]),
+        "1" : [[0,0],[0,1],[0,0],[0,0]].to!(bool[][]),
+        "2" : [[0,0],[1,0],[0,0],[0,0]].to!(bool[][]),
     ]);
 }
 

@@ -22,6 +22,7 @@ void main(string[] args){
         "doorOpenDuration", &doorOpenDuration,
         "travelDuration",   &travelDuration,
         "clearRequestType", &clearRequestType,
+        "includeCab",       &includeCab,
         "i|input",          &input_str,
     );
 
