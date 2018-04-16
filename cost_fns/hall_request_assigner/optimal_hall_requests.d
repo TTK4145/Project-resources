@@ -29,6 +29,8 @@ bool[][][string] optimalHallRequests(
     }
     
     while(true){
+        states.sort!("a.time < b.time")();
+        
         debug(optimal_hall_requests) writeln;
         debug(optimal_hall_requests) writefln("states:\n  %(%s,\n  %)", states);
         debug(optimal_hall_requests) writefln("reqs:\n%(  %(%s, %)\n%)", reqs);
@@ -47,8 +49,6 @@ bool[][][string] optimalHallRequests(
             break;
         }
     
-    
-        states.sort!("a.time < b.time")();
         performSingleMove(states[0], reqs);
     }
     
@@ -227,8 +227,8 @@ bool unvisitedAreImmediatelyAssignable(Req[2][] reqs, State[] states){
 void assignImmediate(ref Req[2][] reqs, ref State[] states){
     foreach(f, ref reqsAtFloor; reqs){
         foreach(c, ref req; reqsAtFloor){
-            if(req.active && req.assignedTo == string.init){
-                foreach(ref s; states){
+            foreach(ref s; states){
+                if(req.active && req.assignedTo == string.init){
                     if(s.state.floor == f && !s.state.cabRequests.any){
                         req.assignedTo = s.id;
                         s.time += doorOpenDuration.msecs;
@@ -370,3 +370,27 @@ unittest {
     ]);
 }
 
+
+unittest {
+    LocalElevatorState[string] states = [
+        "1" : LocalElevatorState(ElevatorBehaviour.moving,  1,  Dirn.up,   [1, 0, 0, 0].to!(bool[])),
+        "2" : LocalElevatorState(ElevatorBehaviour.idle,    1,  Dirn.stop, [1, 0, 0, 0].to!(bool[])),
+        "3" : LocalElevatorState(ElevatorBehaviour.idle,    1,  Dirn.stop, [1, 0, 0, 0].to!(bool[])),
+    ];
+
+    bool[2][] hallreqs = [
+        [true,  false],
+        [false, false],
+        [false, false],
+        [false, true],
+    ];
+    
+
+    auto optimal = optimalHallRequests(hallreqs, states);
+    
+    assert(optimal == [
+        "1" : [[0,0], [0,0], [0,0], [0,1]].to!(bool[][]),
+        "2" : [[1,0], [0,0], [0,0], [0,0]].to!(bool[][]),
+        "3" : [[0,0], [0,0], [0,0], [0,0]].to!(bool[][]),
+    ]);
+}
