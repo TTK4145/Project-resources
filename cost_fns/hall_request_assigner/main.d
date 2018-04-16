@@ -74,4 +74,53 @@ unittest {
     
     string output = optimalHallRequests(i.hallRequests.to!(bool[2][]), i.states).jsonEncode;
     assert(output == correctOutput);
+    
 }
+
+unittest {
+    import std.regex;
+    
+    auto prev = includeCab;
+    includeCab = true;
+    scope(exit) includeCab = prev;
+    
+    Input i = jsonDecode!Input(q{
+        {
+            "hallRequests":
+                [[true,false],[false,false],[true,true],[false,false]],
+            "states" : {
+                "a" : {
+                    "behaviour":"doorOpen",
+                    "floor":1,
+                    "direction":"down",
+                    "cabRequests":[false,false,false,false]
+                },
+                "b" : {
+                    "behaviour":"moving",
+                    "floor":0,
+                    "direction":"up",
+                    "cabRequests":[true,true,true,true]
+                },
+                "c" : {
+                    "behaviour":"moving",
+                    "floor":3,
+                    "direction":"down",
+                    "cabRequests":[false,false,false,false]
+                }
+            }
+        }
+    }.replaceAll(regex(r"\s"), ""));
+    
+    string correctOutput = q{
+        {
+            "a" : [[true,false,false],[false,false,false],[false,false,false],[false,false,false]],
+            "b" : [[false,false,true],[false,false,true],[false,false,true],[false,false,true]],
+            "c" : [[false,false,false],[false,false,false],[true,true,false],[false,false,false]]
+        }
+    }.replaceAll(regex(r"\s"), "");
+    
+    string output = optimalHallRequests(i.hallRequests.to!(bool[2][]), i.states).jsonEncode;
+    assert(output == correctOutput);
+    
+}
+

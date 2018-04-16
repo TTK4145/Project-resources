@@ -160,9 +160,19 @@ void performSingleMove(ref State s, ref Req[2][] reqs){
 
     debug(optimal_hall_requests) writefln("single move: %s", s);
     
-    auto e = s.withReqs!(a => a.active && (a.assignedTo == string.init || a.assignedTo == s.id))(reqs);
+    auto e = s.withReqs!(a => a.active && (a.assignedTo == string.init))(reqs);
     
     debug(optimal_hall_requests) writefln("%s", e);
+    
+    auto onClearRequest = (CallType c){
+        final switch(c) with(CallType){
+        case hallUp, hallDown:
+            reqs[s.state.floor][c].assignedTo = s.id;
+            break;
+        case cab:
+            s.state.cabRequests[s.state.floor] = false;
+        }
+    };
     
     final switch(s.state.behaviour) with(ElevatorBehaviour){
     case moving:
@@ -170,15 +180,7 @@ void performSingleMove(ref State s, ref Req[2][] reqs){
             debug(optimal_hall_requests) writefln("  stopping");
             s.state.behaviour = doorOpen;
             s.time += doorOpenDuration.msecs;
-            e.clearReqsAtFloor((CallType c){
-                final switch(c) with(CallType){
-                case hallUp, hallDown:
-                    reqs[s.state.floor][c].assignedTo = s.id;
-                    break;
-                case cab:
-                    s.state.cabRequests[s.state.floor] = false;
-                }
-            });
+            e.clearReqsAtFloor(onClearRequest);
         } else {
             debug(optimal_hall_requests) writefln("  continuing");
             s.state.floor += s.state.direction;
@@ -187,9 +189,14 @@ void performSingleMove(ref State s, ref Req[2][] reqs){
         break;
     case idle, doorOpen:
         s.state.direction = e.chooseDirection;
-        if(s.state.direction == Dirn.stop){
-            s.state.behaviour = idle;
-            debug(optimal_hall_requests) writefln("  idling");
+        if(s.state.direction == Dirn.stop){            
+            if(e.anyRequestsAtFloor){
+                e.clearReqsAtFloor(onClearRequest);
+                debug(optimal_hall_requests) writefln("  taking req in opposite dirn");
+            } else {
+                s.state.behaviour = idle;
+                debug(optimal_hall_requests) writefln("  idling");
+            }
         } else {
             s.state.behaviour = moving;
             debug(optimal_hall_requests) writefln("  departing");
@@ -340,6 +347,10 @@ unittest {
 unittest {
     // Two hall requests at the same floor, but the closest elevator also has a cab call further in the same direction
     // Should give the two hall orders to different elevators, the one in the "opposite" direction to the one without a cab order
+    auto prev = clearRequestType;
+    clearRequestType = ClearRequestType.inDirn;
+    scope(exit) clearRequestType = prev;
+    
     LocalElevatorState[string] states = [
         "1" : LocalElevatorState(ElevatorBehaviour.moving,  3,  Dirn.down, [1, 0, 0, 0].to!(bool[])),
         "2" : LocalElevatorState(ElevatorBehaviour.idle,    3,  Dirn.down, [0, 0, 0, 0].to!(bool[])),

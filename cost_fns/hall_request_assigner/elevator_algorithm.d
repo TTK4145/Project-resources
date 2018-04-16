@@ -87,14 +87,16 @@ ElevatorState clearReqsAtFloor(ElevatorState e, void delegate(CallType c) onClea
         
         final switch(e.direction) with(Dirn){
         case up:
-            clear(CallType.hallUp);
-            if(!e2.requestsAbove){
+            if(e2.requests[e2.floor][CallType.hallUp]){
+                clear(CallType.hallUp);
+            } else if(!e2.requestsAbove){
                 clear(CallType.hallDown);
             }
             break;
         case down:
-            clear(CallType.hallDown);
-            if(!e2.requestsBelow){
+            if(e2.requests[e2.floor][CallType.hallDown]){
+                clear(CallType.hallDown);
+            } else if(!e2.requestsBelow){
                 clear(CallType.hallUp);
             }
             break;
