@@ -19,7 +19,7 @@ The elevator algorithm is based on preferring to continue in the direction of tr
    - Stop if there is a request in the direction of travel at this floor 
    - Stop if there are no further requests in this direction
  - Clear requests at floor:  
-   This function comes in two variants. We can either assume that anyone waiting for the elevator gets on the elevator regardless of which direction it is travelling in, or that they only get on the elevator if the elevator is going to travel in the direction the passenger desires. (Most people would expect the first behaviour, but there are elevators that only clear the requests "in the direction of travel". I believe the one outside EL6 behaves like this.)
+   This function comes in two variants. We can either assume that anyone waiting for the elevator gets on the elevator regardless of which direction it is traveling in, or that they only get on the elevator if the elevator is going to travel in the direction the passenger desires. (Most people would expect the first behaviour, but there are elevators that only clear the requests "in the direction of travel". I believe the one outside EL6 behaves like this.)
    - Always clear the request for getting off the elevator and the request for entering the elevator in the direction of travel
    - Either:
      - A: Always clear the request for entering the elevator in the opposite direction
@@ -31,9 +31,11 @@ The implementations of these three functions are found in [requests.c](requests.
 Running this program
 ====================
 
- - Copy the driver with simulator from source, using `./copy_driver.sh`
+ - Make sure you have cloned this repository recursively, in order to get the c driver code (`git clone --recursive https://github.com/TTK4145/Project-resources.git`)
+   - Alternatively, download the [C driver from this link](https://github.com/TTK4145/driver-c) and place it in the `driver` folder
  - Compile using `make`. Use `make CC=[compiler]` to use a different compiler (eg `make CC=clang-3.6`)
- - The executable is called `ttk4145demoelevator`
+   - The executable is called `ttk4145demoelevator`
+ - Start the elevator server or simulator before starting this demo program
 
 The config file [elevator.con](elevator.con) can be edited to change the behaviour of the elevator. The elevator program must be restarted in order for the saved changes to take effect.
 
