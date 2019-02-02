@@ -1,5 +1,3 @@
-TODO: Migrate to 2018 driver
-
 Rationale
 =========
 

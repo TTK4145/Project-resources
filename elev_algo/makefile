@@ -3,9 +3,9 @@ EXECUTABLE = ttk4145demoelevator
 
 CC = gcc
 CFLAGS = -Wall -Wextra -g -std=gnu11
-LDFLAGS = -lcomedi -lm
+LDFLAGS = 
 
-SOURCES := $(patsubst ./%, %, $(shell find . -name '*.c'))
+SOURCES := $(patsubst ./%, %, $(shell find . -name '*.c'  ! -name '*test*'))
 OBJECTS = $(addprefix $(OBJDIR)/, $(SOURCES:.c=.o))
 
 
