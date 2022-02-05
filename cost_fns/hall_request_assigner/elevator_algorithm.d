@@ -49,14 +49,16 @@ Dirn chooseDirection(ElevatorState e){
     final switch(e.direction) with(Dirn){
     case up:
         return
-            e.requestsAbove ?   up      :
-            e.requestsBelow ?   down    :
-                                stop;
+            e.requestsAbove         ?   up      :
+            e.anyRequestsAtFloor    ?   stop    :
+            e.requestsBelow         ?   down    :
+                                        stop;
     case down, stop:
         return
-            e.requestsBelow ?   down    :
-            e.requestsAbove ?   up      :
-                                stop;
+            e.requestsBelow         ?   down    :
+            e.anyRequestsAtFloor    ?   stop    :
+            e.requestsAbove         ?   up      :
+                                        stop;
     }
 }
 

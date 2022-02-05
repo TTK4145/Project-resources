@@ -48,7 +48,8 @@ bool[][][string] optimalHallRequests(
         if(done){
             break;
         }
-    
+        
+        debug(optimal_hall_requests) writefln!("'%s' doing single move")(states[0].id);
         performSingleMove(states[0], reqs);
     }
     
@@ -100,7 +101,9 @@ struct State {
 }
 
 
-
+bool isUnassigned(Req r){
+    return r.active && r.assignedTo == string.init;
+}
 
 bool[2][] filterReq(alias fn)(Req[2][] reqs){
     return reqs.map!(a => a.to!(Req[]).map!(fn).array).array.to!(bool[2][]);
@@ -116,7 +119,7 @@ ElevatorState withReqs(alias fn)(State s, Req[2][] reqs){
 
 bool anyUnassigned(Req[2][] reqs){
     return reqs
-        .filterReq!(a => a.active && a.assignedTo == string.init)
+        .filterReq!(isUnassigned)
         .map!(a => a.to!(bool[]).any).any;
 }
 
@@ -136,32 +139,29 @@ void performInitialMove(ref State s, ref Req[2][] reqs){
     debug(optimal_hall_requests) writefln("initial move: %s", s);
     final switch(s.state.behaviour) with(ElevatorBehaviour){    
     case doorOpen:
-        debug(optimal_hall_requests) writefln("  closing door");
+        debug(optimal_hall_requests) writefln!("  '%s' closing door at floor %d")(s.id, s.state.floor);
         s.time += doorOpenDuration.msecs/2;
         goto case idle;
     case idle:
         foreach(c; 0..2){
             if(reqs[s.state.floor][c].active){
-                debug(optimal_hall_requests) writefln("  taking req %s at current floor", c);
                 reqs[s.state.floor][c].assignedTo = s.id;
                 s.time += doorOpenDuration.msecs;
+                debug(optimal_hall_requests) writefln!("  '%s' taking req %s at floor %d")(s.id, c, s.state.floor);
             }
         }
         break;
     case moving:
-        debug(optimal_hall_requests) writefln("  arriving");
         s.state.floor += s.state.direction;
         s.time += travelDuration.msecs/2;
+        debug(optimal_hall_requests) writefln!("  '%s' arriving at %d")(s.id, s.state.floor);
         break;
     }
 }
 
 void performSingleMove(ref State s, ref Req[2][] reqs){
-
-    debug(optimal_hall_requests) writefln("single move: %s", s);
     
-    auto e = s.withReqs!(a => a.active && (a.assignedTo == string.init))(reqs);
-    
+    auto e = s.withReqs!(isUnassigned)(reqs);
     debug(optimal_hall_requests) writefln("%s", e);
     
     auto onClearRequest = (CallType c){
@@ -177,14 +177,14 @@ void performSingleMove(ref State s, ref Req[2][] reqs){
     final switch(s.state.behaviour) with(ElevatorBehaviour){
     case moving:
         if(e.shouldStop){
-            debug(optimal_hall_requests) writefln("  stopping");
             s.state.behaviour = doorOpen;
             s.time += doorOpenDuration.msecs;
             e.clearReqsAtFloor(onClearRequest);
+            debug(optimal_hall_requests) writefln!("  '%s' stopping at %d")(s.id, s.state.floor);
         } else {
-            debug(optimal_hall_requests) writefln("  continuing");
             s.state.floor += s.state.direction;
             s.time += travelDuration.msecs;
+            debug(optimal_hall_requests) writefln!("  '%s' continuing to %d")(s.id, s.state.floor);
         }
         break;
     case idle, doorOpen:
@@ -192,29 +192,36 @@ void performSingleMove(ref State s, ref Req[2][] reqs){
         if(s.state.direction == Dirn.stop){            
             if(e.anyRequestsAtFloor){
                 e.clearReqsAtFloor(onClearRequest);
-                debug(optimal_hall_requests) writefln("  taking req in opposite dirn");
+                s.time += doorOpenDuration.msecs;
+                s.state.behaviour = doorOpen;
+                debug(optimal_hall_requests) writefln!("  '%s' taking req in opposite dirn at %d")(s.id, s.state.floor);
             } else {
                 s.state.behaviour = idle;
-                debug(optimal_hall_requests) writefln("  idling");
+                debug(optimal_hall_requests) writefln!("  '%s' idling at %d")(s.id, s.state.floor);
             }
         } else {
             s.state.behaviour = moving;
-            debug(optimal_hall_requests) writefln("  departing");
             s.state.floor += s.state.direction;
             s.time += travelDuration.msecs;
+            debug(optimal_hall_requests) writefln!("  '%s' departing %s to %d")(s.id, s.state.direction, s.state.floor);
         }
         break;
     }
+    
+    debug(optimal_hall_requests) writefln("%s", s.withReqs!(isUnassigned)(reqs));
 }
 
-// no remaining cab requests and all unvisited hall requests are at floors with elevators
+// no remaining cab requests, no floors with multiple hall requests, and all *unvisited* hall requests are at floors with elevators
 bool unvisitedAreImmediatelyAssignable(Req[2][] reqs, State[] states){
     if(states.map!(a => a.state.cabRequests.any).any){
         return false;
     }
     foreach(f, reqsAtFloor; reqs){
+        if(reqsAtFloor.array.map!(a => a.active).count!(a => a) == 2){
+            return false;
+        }
         foreach(c, req; reqsAtFloor){
-            if(req.active && req.assignedTo == string.init){
+            if(req.isUnassigned){
                 if(states.filter!(a => a.state.floor == f && !a.state.cabRequests.any).empty){
                     return false;
                 }
@@ -228,7 +235,7 @@ void assignImmediate(ref Req[2][] reqs, ref State[] states){
     foreach(f, ref reqsAtFloor; reqs){
         foreach(c, ref req; reqsAtFloor){
             foreach(ref s; states){
-                if(req.active && req.assignedTo == string.init){
+                if(req.isUnassigned){
                     if(s.state.floor == f && !s.state.cabRequests.any){
                         req.assignedTo = s.id;
                         s.time += doorOpenDuration.msecs;
@@ -238,8 +245,6 @@ void assignImmediate(ref Req[2][] reqs, ref State[] states){
         }
     }    
 }
-
-
 
 
 
@@ -372,6 +377,7 @@ unittest {
 
 
 unittest {
+    // Two identical elevators. Assignment should always be to the lexicographically lowest ID
     LocalElevatorState[string] states = [
         "1" : LocalElevatorState(ElevatorBehaviour.moving,  1,  Dirn.up,   [1, 0, 0, 0].to!(bool[])),
         "2" : LocalElevatorState(ElevatorBehaviour.idle,    1,  Dirn.stop, [1, 0, 0, 0].to!(bool[])),
@@ -394,3 +400,58 @@ unittest {
         "3" : [[0,0], [0,0], [0,0], [0,0]].to!(bool[][]),
     ]);
 }
+
+
+unittest {
+    // Single elevator starting at 0, up + down orders at both floor 1 and 2, for inDirn mode specifically:
+    // Elevator should single-stop at 1, double-stop at 2, then single-stop at 1 again (for a total of 4 stops and 3 moves)
+    auto prev = clearRequestType;
+    clearRequestType = ClearRequestType.inDirn;
+    scope(exit) clearRequestType = prev;
+    
+    auto states = initialStates([
+        "one" : LocalElevatorState(ElevatorBehaviour.idle,  0,  Dirn.stop,   [0, 0, 0, 0].to!(bool[])),
+    ]);
+
+    auto hallreqs = [
+        [false, false],
+        [true,  true],
+        [true,  true],
+        [false, false],
+    ].toReq;
+    
+    while(hallreqs.anyUnassigned){
+        performSingleMove(states[0], hallreqs);
+    }
+    
+    assert(states[0].time == (doorOpenDuration*4 + travelDuration*3).msecs);
+}
+
+
+unittest {
+    // Two hall requests at the same floor, but the closest elevator also has a cab call further in the same direction
+    // Should give the two hall orders to different elevators, the one in the "opposite" direction to the one without a cab order
+    auto prev = clearRequestType;
+    clearRequestType = ClearRequestType.inDirn;
+    scope(exit) clearRequestType = prev;
+    
+    LocalElevatorState[string] states = [
+        "one" : LocalElevatorState(ElevatorBehaviour.idle,    0,  Dirn.down, [0, 0, 0, 0].to!(bool[])),
+        "two" : LocalElevatorState(ElevatorBehaviour.idle,    3,  Dirn.down, [0, 0, 0, 0].to!(bool[])),
+    ];
+
+    bool[2][] hallreqs = [
+        [false, false],
+        [true, true],
+        [true, false],
+        [false, false],
+    ];
+        
+    auto optimal = optimalHallRequests(hallreqs, states);
+    assert(optimal == [
+        "one" : [[0,0],[1,0],[1,0],[0,0]].to!(bool[][]),
+        "two" : [[0,0],[0,1],[0,0],[0,0]].to!(bool[][]),
+    ]);
+}
+
+
