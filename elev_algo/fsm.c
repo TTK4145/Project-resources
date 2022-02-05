@@ -41,14 +41,14 @@ void fsm_onInitBetweenFloors(void){
     elevator.behaviour = EB_Moving;
 }
 
+
 void fsm_onRequestButtonPress(int btn_floor, Button btn_type){
     printf("\n\n%s(%d, %s)\n", __FUNCTION__, btn_floor, elevio_button_toString(btn_type));
     elevator_print(elevator);
     
     switch(elevator.behaviour){
-        
     case EB_DoorOpen:
-        if(elevator.floor == btn_floor){
+        if(requests_shouldClearImmediately(elevator, btn_floor, btn_type)){
             timer_start(elevator.config.doorOpenDuration_s);
         } else {
             elevator.requests[btn_floor][btn_type] = 1;
@@ -59,19 +59,26 @@ void fsm_onRequestButtonPress(int btn_floor, Button btn_type){
         elevator.requests[btn_floor][btn_type] = 1;
         break;
         
-    case EB_Idle:
-        if(elevator.floor == btn_floor){
+    case EB_Idle:    
+        elevator.requests[btn_floor][btn_type] = 1;
+        Action a = requests_nextAction(elevator);
+        elevator.dirn = a.dirn;
+        elevator.behaviour = a.behaviour;
+        switch(a.behaviour){
+        case EB_DoorOpen:
             outputDevice.doorLight(1);
             timer_start(elevator.config.doorOpenDuration_s);
-            elevator.behaviour = EB_DoorOpen;
-        } else {
-            elevator.requests[btn_floor][btn_type] = 1;
-            elevator.dirn = requests_chooseDirection(elevator);
+            elevator = requests_clearAtCurrentFloor(elevator);
+            break;
+
+        case EB_Moving:
             outputDevice.motorDirection(elevator.dirn);
-            elevator.behaviour = EB_Moving;
+            break;
+            
+        case EB_Idle:
+            break;
         }
         break;
-        
     }
     
     setAllLights(elevator);
@@ -118,16 +125,22 @@ void fsm_onDoorTimeout(void){
     elevator_print(elevator);
     
     switch(elevator.behaviour){
-    case EB_DoorOpen:
-        elevator.dirn = requests_chooseDirection(elevator);
+    case EB_DoorOpen:;
+        Action a = requests_nextAction(elevator);
+        elevator.dirn = a.dirn;
+        elevator.behaviour = a.behaviour;
         
-        outputDevice.doorLight(0);
-        outputDevice.motorDirection(elevator.dirn);
-        
-        if(elevator.dirn == D_Stop){
-            elevator.behaviour = EB_Idle;
-        } else {
-            elevator.behaviour = EB_Moving;
+        switch(elevator.behaviour){
+        case EB_DoorOpen:
+            timer_start(elevator.config.doorOpenDuration_s);
+            elevator = requests_clearAtCurrentFloor(elevator);
+            setAllLights(elevator);
+            break;
+        case EB_Moving:
+        case EB_Idle:
+            outputDevice.doorLight(0);
+            outputDevice.motorDirection(elevator.dirn);
+            break;
         }
         
         break;

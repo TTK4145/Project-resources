@@ -22,21 +22,39 @@ static int requests_below(Elevator e){
     return 0;
 }
 
-Dirn requests_chooseDirection(Elevator e){
+static int requests_here(Elevator e){
+    for(int btn = 0; btn < N_BUTTONS; btn++){
+        if(e.requests[e.floor][btn]){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+Action requests_nextAction(Elevator e){
     switch(e.dirn){
     case D_Up:
-        return  requests_above(e) ? D_Up    :
-                requests_below(e) ? D_Down  :
-                                    D_Stop  ;
+        return  requests_above(e) ? (Action){D_Up,   EB_Moving}   :
+                requests_here(e)  ? (Action){D_Down, EB_DoorOpen} :
+                requests_below(e) ? (Action){D_Down, EB_Moving}   :
+                                    (Action){D_Stop, EB_Idle}     ;
     case D_Down:
-    case D_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
-        return  requests_below(e) ? D_Down  :
-                requests_above(e) ? D_Up    :
-                                    D_Stop  ;
+        return  requests_below(e) ? (Action){D_Down, EB_Moving}   :
+                requests_here(e)  ? (Action){D_Up,   EB_DoorOpen} :
+                requests_above(e) ? (Action){D_Up,   EB_Moving}   :
+                                    (Action){D_Stop, EB_Idle}     ;
+    case D_Stop: // there should only be one request in the Stop case. Checking up or down first is arbitrary.
+        return  requests_here(e)  ? (Action){D_Stop, EB_DoorOpen} :
+                requests_above(e) ? (Action){D_Up,   EB_Moving}   :
+                requests_below(e) ? (Action){D_Down, EB_Moving}   :
+                                    (Action){D_Stop, EB_Idle}     ;
     default:
-        return D_Stop;
+        return (Action){D_Stop, EB_Idle};
     }
 }
+
+
 
 int requests_shouldStop(Elevator e){
     switch(e.dirn){
@@ -56,6 +74,23 @@ int requests_shouldStop(Elevator e){
     }
 }
 
+int requests_shouldClearImmediately(Elevator e, int btn_floor, Button btn_type){
+    switch(e.config.clearRequestVariant){
+    case CV_All:
+        return e.floor == btn_floor;
+    case CV_InDirn:
+        return 
+            e.floor == btn_floor && 
+            (
+                (e.dirn == D_Up   && btn_type == B_HallUp)    ||
+                (e.dirn == D_Down && btn_type == B_HallDown)  ||
+                e.dirn == D_Stop ||
+                btn_type == B_Cab
+            );  
+    default:
+        return 0;
+    }
+}
 
 Elevator requests_clearAtCurrentFloor(Elevator e){
         
@@ -70,17 +105,17 @@ Elevator requests_clearAtCurrentFloor(Elevator e){
         e.requests[e.floor][B_Cab] = 0;
         switch(e.dirn){
         case D_Up:
-            e.requests[e.floor][B_HallUp] = 0;
-            if(!requests_above(e)){
+            if(!requests_above(e) && !e.requests[e.floor][B_HallUp]){
                 e.requests[e.floor][B_HallDown] = 0;
             }
+            e.requests[e.floor][B_HallUp] = 0;
             break;
             
         case D_Down:
-            e.requests[e.floor][B_HallDown] = 0;
-            if(!requests_below(e)){
+            if(!requests_below(e) && !e.requests[e.floor][B_HallDown]){
                 e.requests[e.floor][B_HallUp] = 0;
             }
+            e.requests[e.floor][B_HallDown] = 0;
             break;
             
         case D_Stop:

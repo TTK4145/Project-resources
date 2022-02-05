@@ -49,8 +49,8 @@ int main(void){
         
         { // Timer
             if(timer_timedOut()){
-                fsm_onDoorTimeout();
                 timer_stop();
+                fsm_onDoorTimeout();
             }
         }
         
