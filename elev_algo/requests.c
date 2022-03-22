@@ -32,25 +32,25 @@ static int requests_here(Elevator e){
 }
 
 
-Action requests_nextAction(Elevator e){
+DirnBehaviourPair requests_chooseDirection(Elevator e){
     switch(e.dirn){
     case D_Up:
-        return  requests_above(e) ? (Action){D_Up,   EB_Moving}   :
-                requests_here(e)  ? (Action){D_Down, EB_DoorOpen} :
-                requests_below(e) ? (Action){D_Down, EB_Moving}   :
-                                    (Action){D_Stop, EB_Idle}     ;
+        return  requests_above(e) ? (DirnBehaviourPair){D_Up,   EB_Moving}   :
+                requests_here(e)  ? (DirnBehaviourPair){D_Down, EB_DoorOpen} :
+                requests_below(e) ? (DirnBehaviourPair){D_Down, EB_Moving}   :
+                                    (DirnBehaviourPair){D_Stop, EB_Idle}     ;
     case D_Down:
-        return  requests_below(e) ? (Action){D_Down, EB_Moving}   :
-                requests_here(e)  ? (Action){D_Up,   EB_DoorOpen} :
-                requests_above(e) ? (Action){D_Up,   EB_Moving}   :
-                                    (Action){D_Stop, EB_Idle}     ;
+        return  requests_below(e) ? (DirnBehaviourPair){D_Down, EB_Moving}   :
+                requests_here(e)  ? (DirnBehaviourPair){D_Up,   EB_DoorOpen} :
+                requests_above(e) ? (DirnBehaviourPair){D_Up,   EB_Moving}   :
+                                    (DirnBehaviourPair){D_Stop, EB_Idle}     ;
     case D_Stop: // there should only be one request in the Stop case. Checking up or down first is arbitrary.
-        return  requests_here(e)  ? (Action){D_Stop, EB_DoorOpen} :
-                requests_above(e) ? (Action){D_Up,   EB_Moving}   :
-                requests_below(e) ? (Action){D_Down, EB_Moving}   :
-                                    (Action){D_Stop, EB_Idle}     ;
+        return  requests_here(e)  ? (DirnBehaviourPair){D_Stop, EB_DoorOpen} :
+                requests_above(e) ? (DirnBehaviourPair){D_Up,   EB_Moving}   :
+                requests_below(e) ? (DirnBehaviourPair){D_Down, EB_Moving}   :
+                                    (DirnBehaviourPair){D_Stop, EB_Idle}     ;
     default:
-        return (Action){D_Stop, EB_Idle};
+        return (DirnBehaviourPair){D_Stop, EB_Idle};
     }
 }
 

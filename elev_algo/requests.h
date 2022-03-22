@@ -7,11 +7,11 @@
 typedef struct {
     Dirn                dirn;
     ElevatorBehaviour   behaviour;
-} Action;
+} DirnBehaviourPair;
 
 
 
-Action requests_nextAction(Elevator e) __attribute__((pure));
+DirnBehaviourPair requests_chooseDirection(Elevator e) __attribute__((pure));
 
 int requests_shouldStop(Elevator e) __attribute__((pure));
 

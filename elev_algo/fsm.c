@@ -61,10 +61,10 @@ void fsm_onRequestButtonPress(int btn_floor, Button btn_type){
         
     case EB_Idle:    
         elevator.requests[btn_floor][btn_type] = 1;
-        Action a = requests_nextAction(elevator);
-        elevator.dirn = a.dirn;
-        elevator.behaviour = a.behaviour;
-        switch(a.behaviour){
+        DirnBehaviourPair pair = requests_chooseDirection(elevator);
+        elevator.dirn = pair.dirn;
+        elevator.behaviour = pair.behaviour;
+        switch(pair.behaviour){
         case EB_DoorOpen:
             outputDevice.doorLight(1);
             timer_start(elevator.config.doorOpenDuration_s);
@@ -126,9 +126,9 @@ void fsm_onDoorTimeout(void){
     
     switch(elevator.behaviour){
     case EB_DoorOpen:;
-        Action a = requests_nextAction(elevator);
-        elevator.dirn = a.dirn;
-        elevator.behaviour = a.behaviour;
+        DirnBehaviourPair pair = requests_chooseDirection(elevator);
+        elevator.dirn = pair.dirn;
+        elevator.behaviour = pair.behaviour;
         
         switch(elevator.behaviour){
         case EB_DoorOpen:
