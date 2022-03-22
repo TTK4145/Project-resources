@@ -28,7 +28,7 @@ From here we have two main ways of doing assignment: Assigning only a single new
 
 ### Alternative 1: Assigning only the new request
 
-In this alternative, a hall request is assigned to a particular elevator for the duration of the lifetime of that request, ie. the hall request is not "moved" to another elevator during normal operation (say, due to the assigned elevator getting a lot of cab requests). This means that we already know the combined cab and hall workload of each elevator.
+In this alternative, a hall request is assigned to a particular elevator for the duration of the lifetime of that request, i.e. the hall request is not "moved" to another elevator during normal operation (say, due to the assigned elevator getting a lot of cab requests). This means that we already know the combined cab and hall workload of each elevator.
 
 From this we can calculate the cost of the new unassigned hall request by adding it to the existing workload and simulating the execution of the elevator. For this simulation we use the functions that we already have from the single elevator algorithm: Choose Direction, Should Stop, and Clear Requests At Current Floor:
 
@@ -48,10 +48,11 @@ Note that in order to reuse the function for clearing requests in a simulated co
 
 The suggested modification is giving `requests_clearAtCurrentFloor` a second argument containing a function pointer to some side-effect, which lets us pass some function like "publish the clearing of this order", or in the case of our cost function - "do nothing", which is exactly what we want. *(For most sensible modern languages, the passed-in function would be a lambda, or some other thing that lets you capture the enclosing scope, so the `floor` parameter to the inner function is probably not necessary)*
 
-If you are really scared of function pointers (or the designers of your language of choice were scared and didn't implement it), you can just make two functions (one simulated & one real), or pass a "simulate" boolean. Just make sure that the simulated behavior and real behavior are the same.
+If you are really scared of function pointers (or the designers of your language of choice were scared and didn't implement it), you can just make two functions (one simulated & one real), or pass a "simulate" boolean. Just make sure that the simulated behavior and real behavior are the same. Or, you could make the function return a list of orders to clear, then for-each through it afterwards.
 ```C
 Elevator requests_clearAtCurrentFloor(Elevator e_old, void onClearedRequest(Button b, int floor)){
     Elevator e = e_old;
+    // This shouldn't clear every single order - just to make the example shorter
     for(Button btn = 0; btn < N_BUTTONS; btn++){
         if(e.requests[e.floor][btn]){
             e.requests[e.floor][btn] = 0;
@@ -124,7 +125,7 @@ Remember to copy the Elevator data and add the new unassigned request to that co
 #### Alternative 1.2: Time until unassigned request served
 
 As a slight modification, we can take the time it takes to serve specifically this new unassigned request, as opposed to all requests combined. The two modifications are
- - An extra parameter for the floor (and button type, depending on how requests are cleared) of the new request
+ - An extra parameter for the floor and button type of the new request
  - Passing a comparison of the cleared request and the unassigned request to the Clear Requests function
  
 (The example code is not technically valid C, but it compiles with GCC because they are gracious enough to supply [nested functions](https://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html) as a compiler extension. Thanks GCC!)
@@ -177,11 +178,13 @@ int timeToServeRequest(Elevator e_old, Button b, floor f){
 
 ### Alternative 2: Reassigning all requests
 
-For this alternative, all hall requests are reassigned whenever new data enters the system. This new data could be a new request, an updated state from some elevator, or an update on who is alive on the network. This redistribution means that a request is not necessarily assigned to the same elevator for the duration of its lifetime, but can instead be re-assigned to a new elevator, for example if a new idle elevator connects to the network, or the previously assigned elevator gets a lot of cab reqeusts.
+For this alternative, all hall requests are reassigned whenever new data enters the system. This new data could be a new request, an updated state from some elevator, or an update on who is alive on the network. This redistribution means that a request is not necessarily assigned to the same elevator for the duration of its lifetime, but can instead be re-assigned to a new elevator, for example if a new idle elevator connects to the network, or the previously assigned elevator gets a lot of cab requests.
 
-In order for this approach to work, it is necessary that either a) this distribution is uniquely calculated by some single elevator (some kind of master elevator), or b) all elevators that calculate the redistribution eventually come to the same conclusion (if the input data is not (eventually) consistent across the elevators, we can end up in a situation where a request is never served because all the elevators come to different conclusions that say "it is optimal that some other elevator is serving this request")
+In order for this approach to work, it is necessary that either a) this distribution is uniquely calculated by some single elevator (some kind of master elevator), or b) all elevators that calculate the redistribution eventually come to the same conclusion - if the input data is not (eventually) consistent across the elevators, we can end up in a situation where a request is never served because all the elevators come to different conclusions that say "it is optimal that some other elevator is serving this request".
 
 Unlike with Alternative 1, it is not recommended that you try to implement this code yourself - at least not without being inspired by (aka copying) existing code. This code [is found here](hall_request_assigner), and has already been compiled as a standalone executable which can be found in [the releases tab](https://github.com/TTK4145/Project-resources/releases/latest).
+
+*If you are on linux (and osx?), you will likely have to give yourself permission to run the program after downloading it with `chmod a+rwx hall_request_assigner`*
 
 ----
 
