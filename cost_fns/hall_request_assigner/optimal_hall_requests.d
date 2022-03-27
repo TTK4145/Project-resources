@@ -16,7 +16,20 @@ import std.stdio;
 bool[][][string] optimalHallRequests(
     bool[2][]                       hallReqs,
     LocalElevatorState[string]      elevatorStates,
-){    
+)    
+in {
+        auto numFloors = hallReqs.length;
+        assert(elevatorStates.length,
+            "No elevator states provided");
+        assert(elevatorStates.values.map!(a => a.cabRequests.length == numFloors).all,
+            "Hall and cab requests do not all have the same length");
+        bool isInBounds(int f){ return f >= 0 && f < numFloors; }
+        assert(elevatorStates.values.map!(a => isInBounds(a.floor)).all,
+            "Some elevator is at an invalid floor");
+        assert(elevatorStates.values.map!(a => isInBounds(a.floor + a.direction)).all,
+            "Some elevator is moving away from an end floor");
+}
+do {
     auto reqs   = hallReqs.toReq;
     auto states = initialStates(elevatorStates);
     
