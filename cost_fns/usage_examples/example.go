@@ -51,14 +51,24 @@ func main(){
     }
 
     jsonBytes, err := json.Marshal(input)
-    fmt.Println("json.Marshal error: ", err)
+    if err != nil {
+        fmt.Println("json.Marshal error: ", err)
+        return
+    }
     
-    ret, err := exec.Command("../hall_request_assigner/"+hraExecutable, "-i", string(jsonBytes)).Output()
-    fmt.Println("exec.Command error: ", err)
+    ret, err := exec.Command("../hall_request_assigner/"+hraExecutable, "-i", string(jsonBytes)).CombinedOutput()
+    if err != nil {
+        fmt.Println("exec.Command error: ", err)
+        fmt.Println(string(ret))
+        return
+    }
     
     output := new(map[string][][2]bool)
     err = json.Unmarshal(ret, &output)
-    fmt.Println("json.Unmarshal error: ", err)
+    if err != nil {
+        fmt.Println("json.Unmarshal error: ", err)
+        return
+    }
         
     fmt.Printf("output: \n")
     for k, v := range *output {
