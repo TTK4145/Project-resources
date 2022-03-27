@@ -67,13 +67,19 @@ void main(string[] args){
     
     if(name != string.init){
         auto pids = format!("pidof %s")(name).executeShell.output.split;
-        writefln!("Pids matching program name '%s': %-(%s, %)")(name, pids);
+        writefln!("%d pids matching program name '%s': %-(%s, %)")(pids.length, name, pids);
         foreach(pid; pids){
-            ports ~= format!("lsof -e /run/user/1000/gvfs -aPn -i -p %s -F n")(pid)
-                .executeShell
-                .output
-                .split[1..$]
-                .map!(a => a[3..$].to!ushort)
+            auto cmd = format!(
+                `sudo netstat -aputn`~
+                `| grep "0.0.0.0"`~
+                `| grep "%s"`~
+                `| awk '{print $4}'`~
+                `| awk -F ':' '{print $2}'`
+            )(pid).executeShell;
+            ports ~= 
+                cmd.output
+                .split
+                .map!(a => a.strip('\0').to!ushort)
                 .array;
         }
         ports = ports.sort.uniq.array;
