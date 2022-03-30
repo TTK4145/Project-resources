@@ -26,7 +26,10 @@ in {
         bool isInBounds(int f){ return f >= 0 && f < numFloors; }
         assert(elevatorStates.values.map!(a => isInBounds(a.floor)).all,
             "Some elevator is at an invalid floor");
-        assert(elevatorStates.values.map!(a => isInBounds(a.floor + a.direction)).all,
+        assert(elevatorStates.values
+                .filter!(a => a.behaviour == ElevatorBehaviour.moving)
+                .map!(a => isInBounds(a.floor + a.direction))
+                .all,
             "Some elevator is moving away from an end floor");
 }
 do {
