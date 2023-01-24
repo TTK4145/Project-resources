@@ -17,7 +17,7 @@ Language resources
 
 We encourage submissions to this list! Tutorials, libraries, articles, blog posts, talks, videos...
  - [Python](http://python.org/)
-   - [Official tutorial (2.7)](http://docs.python.org/2.7/tutorial/)
+   - [Official tutorial](https://docs.python.org/3/tutorial/)
    - [Python for Programmers](https://wiki.python.org/moin/BeginnersGuide/Programmers) (Several websites/books/tutorials)
    - [Advanced Python Programming](http://www.slideshare.net/vishnukraj/advanced-python-programming)
    - [Socket Programming HOWTO](http://docs.python.org/2/howto/sockets.html)
@@ -29,9 +29,9 @@ We encourage submissions to this list! Tutorials, libraries, articles, blog post
    - [Beej's network tutorial](http://beej.us/guide/bgnet/)
    - [Deep C](http://www.slideshare.net/olvemaudal/deep-c)
  - [Go](http://golang.org/)
-   - [Official tour](http://tour.golang.org/)
+   - [Official tour](https://go.dev/tour/)
    - [Go by Example](https://gobyexample.com/)
-   - [Learning Go](http://www.miek.nl/projects/learninggo/)
+   - [Learning Go](https://miek.nl/go/)
    - From [the wiki](http://code.google.com/p/go-wiki/): [Articles](https://code.google.com/p/go-wiki/wiki/Articles), [Talks](https://code.google.com/p/go-wiki/wiki/GoTalks)
    - [Advanced Go Concurrency Patterns](https://www.youtube.com/watch?v=QDDwwePbDtw) (video): transforming problems into the for-select-loop form
  - [D](http://dlang.org/)
