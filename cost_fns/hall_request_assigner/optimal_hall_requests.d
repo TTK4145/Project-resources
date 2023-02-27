@@ -125,8 +125,14 @@ bool[2][] filterReq(alias fn)(Req[2][] reqs){
     return reqs.map!(a => a.to!(Req[]).map!(fn).array).array.to!(bool[2][]);
 }
 
-Req[2][] toReq(bool[2][] hallReqs){
-    return hallReqs.map!(a => a.to!(bool[]).map!(b => Req(b, string.init)).array).array.to!(Req[2][]);
+Req[2][] toReq(bool[2][] hallReqs) {
+    auto r = new Req[2][](hallReqs.length);
+    foreach(f, reqsAtFloor; hallReqs){
+        foreach(b, req; reqsAtFloor){
+            r[f][b] = Req(hallReqs[f][b], string.init);
+        }
+    }
+    return r;
 }
 
 ElevatorState withReqs(alias fn)(State s, Req[2][] reqs){
