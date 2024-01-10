@@ -7,6 +7,7 @@ Contents:
 
  - [Single elevator algorithm and demo code](/elev_algo) for implementing this as a finite state machine in C
  - [Cost functions](/cost_fns) and ways to assign new hall requests to elevators
+ - [Packet loss script](/packet_loss) for Linux to easily simulate packet loss
  - Links to external programming language and design resources (below)
 
 
