@@ -27,6 +27,7 @@ The elevator algorithm is based on preferring to continue in the direction of tr
      
 The implementations of these three functions are found in [requests.c](requests.c).
 
+**NB: For TTK4145, users are assumed to only enter an elevator moving in the direction they have requested. See "An individual elevator should behave sensibly and efficiently" in the specification.**
 
 Running this program
 ====================
