@@ -53,7 +53,7 @@ We encourage submissions to this list! Tutorials, libraries, articles, blog post
     - [GenServer - A behaviour module for implementing the server of a client-server relation (managing state)](https://hexdocs.pm/elixir/GenServer.html)
     - [GenServer Cheatsheet](https://elixir-lang.org/downloads/cheatsheets/gen-server.pdf)
     - [Node - Module for connecting to other Erlang/Elixir instances](https://hexdocs.pm/elixir/Node.html)
-    - [Mix Release - Assemble project to a portable self contained ](https://hexdocs.pm/mix/1.18.2/Mix.Tasks.Release.html)
+    - [Mix Release - Assemble project to a portable self contained folder](https://hexdocs.pm/mix/1.18.2/Mix.Tasks.Release.html)
  - [Rust](http://www.rust-lang.org/)
  - Java
    - [The Java Tutorials](http://docs.oracle.com/javase/tutorial/index.html)
