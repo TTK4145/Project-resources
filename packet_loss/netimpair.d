@@ -2,6 +2,7 @@
 import std;
 import core.thread;
 import core.sys.posix.signal;
+import core.sys.posix.unistd;
 
 auto helpstr = format!(`
 Network impairment script.
@@ -83,9 +84,10 @@ enum Impairment[Preset] presets = [
     Preset.absurd:  Impairment(loss:50, lossCorr:60, delay:80, jitter:40, reorder:10, duplicate:10),
 ];
 
+enum ushort[] excludeList = [22, 80, 443];
+
 void main(string[] args){
     
-    string iface = defaultNetIface();
     
     bool        help;
     bool        list;
@@ -117,15 +119,20 @@ void main(string[] args){
         return;
     }
     
-    void reapply(ushort[] ports, Impairment i){
-        auto prio = 0;
-        exclude([22, 80, 443], prio);
-        include(ports, prio);
-        impair(i);
+    if(geteuid() != 0){
+        writeln("Program must be run with 'sudo'!");
+        return;
     }
     
     
-
+    string iface = defaultNetIface();
+    
+    void reapply(ushort[] ports, Impairment i){
+        auto prio = 0;
+        exclude(excludeList, prio);
+        include(ports, prio);
+        impair(i);
+    }
     
     Impairment i;
     switch(preset) with(Preset){
@@ -175,7 +182,10 @@ void main(string[] args){
     if(all){
         writeln("MODE: All ports");
         setup(iface);
-        reapply(ports, i);
+        auto prio = 0;
+        exclude(excludeList, prio);
+        includeAll(prio);
+        impair(i);
         return;
     }
     
@@ -305,9 +315,6 @@ void teardown(string iface){
     execEcho([
         i"tc filter del dev $(iface) parent ffff: protocol ip prio 1".text,
         i"tc qdisc del dev $(iface) ingress".text,
-        //"ip link set dev ifb0 down",
-        //"tc qdisc del root dev ifb0",
-        //"sudo ip link del name ifb0",
         "ip link set dev ifb1 down",
         "tc qdisc del root dev ifb1",
         "sudo ip link del name ifb1",
