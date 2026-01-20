@@ -50,5 +50,15 @@ The request buttons are called "Hall" and "Cab", as opposed to "external" and "i
 
 The "state-machine-state" is called "behaviour", as the full state of the elevator also includes direction, floor, and active requests. "Behaviour" just seems like a more precise name: An elevator that is "moving" is doing a different kind of thing (or "verbing a different verb", if you like) than an elevator that is "being idle".
 
-`fsm.c` and `timer.c` have local state. `fsm.c` because it is a state machine (so it needs state), `timer.c` because it needs to share state with the "outside world" (because it is a timer). It is possible to circumvent this by lifting the elevator state out of `fsm.c` (by passing the current state and returning the new state from each of the fsm functions), and including the "doorCloseTime" in the elevator state. (But to make the fsm functions completely pure, you'd also have to return the "list-of-output-actions" along with the new state, but this is a giant hassle in C. I chose to stick to the more imperative C-like way of doing it, rather than trying to do functional programming in C)
+There are three major boundaries in this program:
+ - `main` -> `fsm`: Inputs need to be polled and passed on to the elevator algorithm  
+    This boundary is just a function call, but you should consider making this a message
+ - `fsm` -> `requests`: The elevator algorithm makes decisions  
+    Requests-functions are pure, so they are extracted
+ - `fsm` -> `elevator` output: The elevator algorithm has to affect the outside world  
+    This prevents FSM-functions from being pure. Placing these as cases in a message-receive will be possible once the main-to-FSM boundary is changed to message passing
+
+Since C does not have multiple return values or anonymous tuples, the "choose direction" function returns a struct. You should change this the whatever is the most language-appropriate mechanism. The door timer should also be replaced with whatever timeout mechanism you can find in your language's standard library.
+
+Your events will probably be something else than direct button presses (since they can conceptually come from anywhere, not just the local hardware). 
 
