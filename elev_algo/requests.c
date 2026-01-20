@@ -75,61 +75,40 @@ int requests_shouldStop(Elevator e){
 }
 
 int requests_shouldClearImmediately(Elevator e, int btn_floor, Button btn_type){
-    switch(e.config.clearRequestVariant){
-    case CV_All:
-        return e.floor == btn_floor;
-    case CV_InDirn:
-        return 
-            e.floor == btn_floor && 
-            (
-                (e.dirn == D_Up   && btn_type == B_HallUp)    ||
-                (e.dirn == D_Down && btn_type == B_HallDown)  ||
-                e.dirn == D_Stop ||
-                btn_type == B_Cab
-            );  
-    default:
-        return 0;
-    }
+    return 
+        e.floor == btn_floor && 
+        (
+            (e.dirn == D_Up   && btn_type == B_HallUp)    ||
+            (e.dirn == D_Down && btn_type == B_HallDown)  ||
+            e.dirn == D_Stop ||
+            btn_type == B_Cab
+        );  
 }
 
 Elevator requests_clearAtCurrentFloor(Elevator e){
         
-    switch(e.config.clearRequestVariant){
-    case CV_All:
-        for(Button btn = 0; btn < N_BUTTONS; btn++){
-            e.requests[e.floor][btn] = 0;
+    e.requests[e.floor][B_Cab] = 0;
+    switch(e.dirn){
+    case D_Up:
+        if(!requests_above(e) && !e.requests[e.floor][B_HallUp]){
+            e.requests[e.floor][B_HallDown] = 0;
         }
+        e.requests[e.floor][B_HallUp] = 0;
         break;
         
-    case CV_InDirn:
-        e.requests[e.floor][B_Cab] = 0;
-        switch(e.dirn){
-        case D_Up:
-            if(!requests_above(e) && !e.requests[e.floor][B_HallUp]){
-                e.requests[e.floor][B_HallDown] = 0;
-            }
+    case D_Down:
+        if(!requests_below(e) && !e.requests[e.floor][B_HallDown]){
             e.requests[e.floor][B_HallUp] = 0;
-            break;
-            
-        case D_Down:
-            if(!requests_below(e) && !e.requests[e.floor][B_HallDown]){
-                e.requests[e.floor][B_HallUp] = 0;
-            }
-            e.requests[e.floor][B_HallDown] = 0;
-            break;
-            
-        case D_Stop:
-        default:
-            e.requests[e.floor][B_HallUp] = 0;
-            e.requests[e.floor][B_HallDown] = 0;
-            break;
         }
+        e.requests[e.floor][B_HallDown] = 0;
         break;
         
+    case D_Stop:
     default:
+        e.requests[e.floor][B_HallUp] = 0;
+        e.requests[e.floor][B_HallDown] = 0;
         break;
     }
-    
     return e;
 }
 

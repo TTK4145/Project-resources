@@ -1,22 +1,25 @@
 #pragma once
 
-#include "elevator_io_types.h"
+#define N_FLOORS 4
+#define N_BUTTONS 3
+
+typedef enum { 
+    D_Down  = -1,
+    D_Stop  = 0,
+    D_Up    = 1
+} Dirn;
+
+typedef enum { 
+    B_HallUp,
+    B_HallDown,
+    B_Cab
+} Button;
 
 typedef enum {
     EB_Idle,
     EB_DoorOpen,
     EB_Moving
 } ElevatorBehaviour;
-
-typedef enum {
-    // Assume everyone waiting for the elevator gets on the elevator, even if 
-    // they will be traveling in the "wrong" direction for a while
-    CV_All,
-    
-    // Assume that only those that want to travel in the current direction 
-    // enter the elevator, and keep waiting outside otherwise
-    CV_InDirn,
-} ClearRequestVariant;
 
 typedef struct {
     int                     floor;
@@ -25,12 +28,26 @@ typedef struct {
     ElevatorBehaviour       behaviour;
     
     struct {
-        ClearRequestVariant clearRequestVariant;
         double              doorOpenDuration_s;
     } config;    
 } Elevator;
 
 
+char* elevator_behaviorToString(ElevatorBehaviour eb);
+char* elevator_dirnToString(Dirn d);
+char* elevator_buttonToString(Button b);
+
 void elevator_print(Elevator es);
 
 Elevator elevator_uninitialized(void);
+
+int elevator_floorSensor(void);
+int elevator_requestButton(int f, Button b);
+int elevator_stopButton(void);
+int elevator_obstruction(void);
+
+void elevator_floorIndicator(int f);
+void elevator_requestButtonLight(int f, Button b, int v);
+void elevator_doorLight(int v);
+void elevator_stopButtonLight(int v);
+void elevator_motorDirection(Dirn d);

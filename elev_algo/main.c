@@ -4,23 +4,23 @@
 #include <unistd.h>
 
 #include "con_load.h"
-#include "elevator_io_device.h"
 #include "fsm.h"
 #include "timer.h"
-
 
 int main(void){
     printf("Started!\n");
     
+
+    Elevator elevator = elevator_uninitialized();
     int inputPollRate_ms = 25;
+    
     con_load("elevator.con",
+        con_val("doorOpenDuration_s", &elevator.config.doorOpenDuration_s, "%lf")
         con_val("inputPollRate_ms", &inputPollRate_ms, "%d")
     )
     
-    ElevInputDevice input = elevio_getInputDevice();    
-    
-    if(input.floorSensor() == -1){
-        fsm_onInitBetweenFloors();
+    if(elevator_floorSensor() == -1){
+        fsm_onInitBetweenFloors(&elevator);
     }
         
     while(1){
@@ -28,9 +28,9 @@ int main(void){
             static int prev[N_FLOORS][N_BUTTONS];
             for(int f = 0; f < N_FLOORS; f++){
                 for(int b = 0; b < N_BUTTONS; b++){
-                    int v = input.requestButton(f, b);
+                    int v = elevator_requestButton(f, b);
                     if(v  &&  v != prev[f][b]){
-                        fsm_onRequestButtonPress(f, b);
+                        fsm_onRequestButtonPress(&elevator, f, b);
                     }
                     prev[f][b] = v;
                 }
@@ -39,9 +39,9 @@ int main(void){
         
         { // Floor sensor
             static int prev = -1;
-            int f = input.floorSensor();
+            int f = elevator_floorSensor();
             if(f != -1  &&  f != prev){
-                fsm_onFloorArrival(f);
+                fsm_onFloorArrival(&elevator, f);
             }
             prev = f;
         }
@@ -50,7 +50,7 @@ int main(void){
         { // Timer
             if(timer_timedOut()){
                 timer_stop();
-                fsm_onDoorTimeout();
+                fsm_onDoorTimeout(&elevator);
             }
         }
         
