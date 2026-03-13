@@ -88,5 +88,5 @@ Run `build.sh`, or copy its one line of content and run that.
  - `--doorOpenDuration` : Door open time in milliseconds (default 3000)
  - `--clearRequestType` : When stopping at a floor, clear either `all` requests or only those `inDirn` (default)
  - `--includeCab` : Includes the cab requests in the output. The output becomes a 3xN boolean matrix for each elevator (`[[up-0, down-0, cab-0], [...],...]`). (disabled by default)
- 
+ - - You have to `git clone --recurse` to include cab orders, recompiling from source may also work.
 If JSON input is not passed on the command line, the program will read the first line from stdin instead. JSON output is written to stdout.
